@@ -1,68 +1,26 @@
-"use client";
+'use client'
 import { useState, useMemo, useEffect } from 'react';
 import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
 
-const buttonStyle = {
-  cursor: "pointer",
-  padding: "10px 20px",
-  margin: "10px 10px 0px 0px",
-  borderRadius: "6px",
-  backgroundColor: "#f0d9b5",
-  border: "none",
-  boxShadow: "0 2px 5px rgba(0, 0, 0, 0.5)",
-};
-
-const boardWrapper = {
-  display: 'flex',
-  alignItems: 'flex-start',
-  width: '90vw',
-  maxWidth: '1200px',
-  margin: '3rem auto',
-  gap: '2rem',
-};
-
-const chessboardStyle = {
-  flexGrow: 1,
-  maxWidth: '70vh',
-};
-
-const analysisStyle = {
-  width: '30%',
-  padding: '1rem',
-  backgroundColor: '#f9f9f9',
-  borderRadius: '6px',
-  boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)',
-};
-
-const movesListStyle = {
-  listStyleType: 'none',
-  padding: 0,
-  margin: 0,
-  overflowY: 'auto',
-  maxHeight: '300px',
-};
-
 const ChessboardComponent = () => {
+  const pieces = ['wP', 'wN', 'wB', 'wR', 'wQ', 'wK','bP', 'bN', 'bB', 'bR', 'bQ', 'bK'];
   const [game, setGame] = useState(new Chess());
   const [moves, setMoves] = useState([]);
   const [analysis, setAnalysis] = useState(null);
   const [orientation, setOrientation] = useState("white");
+  const [currentPlayer, setCurrentPlayer] = useState('white');
 
-  useEffect(() => {
-    if (moves.length > 0) {
-      analyzeChessMoves(moves);
-    }
-  }, [moves]);
-
-  async function analyzeChessMoves(moves) {
+  async function analyzeChessMoves(fen) {
     const url = 'http://localhost:5000/analyze';  // Replace with your server's address if different
-
+  
+    // Prepare the request payload
     const payload = {
-      moves: moves
+      fen: fen
     };
-
+  
     try {
+      // Send the POST request
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -70,18 +28,32 @@ const ChessboardComponent = () => {
         },
         body: JSON.stringify(payload)
       });
-
+  
+      // Check if the request was successful
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-
+  
+      // Parse the JSON response
       const data = await response.json();
-      setAnalysis(data);
+  
+      // Log the result for testing
+      console.log('Best Move:', data.bestMove);
+      console.log('Score:', data.score);
+      console.log('Depth:', data.depth);
 
+      // Set the analysis state
+      setAnalysis(data);
+  
     } catch (error) {
       console.error('Error:', error);
     }
   }
+  
+  useEffect(() => {
+    analyzeChessMoves(game.fen());
+  }, [game]);
+  
 
   function safeGameMutate(modify) {
     setGame((g) => {
@@ -92,30 +64,28 @@ const ChessboardComponent = () => {
   }
 
   function onDrop(sourceSquare, targetSquare, piece) {
-    const gameCopy = new Chess(game.fen());
-    const move = gameCopy.move({
-      from: sourceSquare,
-      to: targetSquare,
-      promotion: (sourceSquare[1] === '7' && targetSquare[1] === '8') || (sourceSquare[1] === '2' && targetSquare[1] === '1') ? 'q' : undefined,
-    });
-
-    if (move) {
-      setGame(gameCopy);
-      setMoves((prevMoves) => [...prevMoves, move.san]);
-      setTimeout(() => {
-        setOrientation((prevOrientation) => (prevOrientation === "white" ? "black" : "white"));
-      }, 300);
-      analyzeChessMoves([...moves, move.san]); // Analyze moves after each move
-      return true;
+    try {
+      const gameCopy = new Chess(game.fen());
+      const move = gameCopy.move({
+        from: sourceSquare,
+        to: targetSquare,
+        promotion: (sourceSquare[1] === '7' && targetSquare[1] === '8') || (sourceSquare[1] === '2' && targetSquare[1] === '1') ? 'q' : undefined,
+      });
+  
+      if (move) {
+        setAnalysis(null);
+        setGame(gameCopy);
+        setMoves((prevMoves) => [...prevMoves, move.san]);
+        console.log("bruh", move, moves);
+        const nextPlayer = currentPlayer === 'white' ? 'black' : 'white';
+        setCurrentPlayer(nextPlayer);
+      }
+    } catch (error) {
+      console.error('Invalid move:', error.message);
+      // Optionally, you can show a message to the user indicating that the move is invalid
     }
-    return false;
   }
-
-  const pieces = [
-    'wP', 'wN', 'wB', 'wR', 'wQ', 'wK',
-    'bP', 'bN', 'bB', 'bR', 'bQ', 'bK'
-  ];
-
+  
   const customPieces = useMemo(() => {
     const pieceComponents = {};
     pieces.forEach((piece) => {
@@ -134,8 +104,8 @@ const ChessboardComponent = () => {
   }, []);
 
   return (
-    <div style={boardWrapper}>
-      <div style={chessboardStyle}>
+    <div className="flex flex-row gap-8">
+      <div>
         <Chessboard
           id="StyledBoard"
           allowDragOutsideBoard={true}
@@ -161,38 +131,10 @@ const ChessboardComponent = () => {
           showBoardNotation={true}
           snapToCursor={true}
         />
-        <div>
-          <button
-            style={buttonStyle}
-            onClick={() => {
-              safeGameMutate((game) => {
-                game.reset();
-              });
-              setMoves([]);
-              setOrientation("white");
-              setAnalysis(null);
-            }}
-          >
-            Reset
-          </button>
-          <button
-            style={buttonStyle}
-            onClick={() => {
-              safeGameMutate((game) => {
-                game.undo();
-              });
-              setMoves((prevMoves) => prevMoves.slice(0, -1));
-              setTimeout(() => {
-                setOrientation((prevOrientation) => (prevOrientation === "white" ? "black" : "white"));
-              }, 300);
-            }}
-          >
-            Undo
-          </button>
-        </div>
       </div>
-      <div style={analysisStyle}>
-        <h3>Analysis:</h3>
+
+      <div className="bg-gray-500 rounded p-4">
+        <h3 className="text-lg font-semibold">Analysis:</h3>
         {analysis ? (
           <div>
             <p><strong>Best Move:</strong> {analysis.bestMove}</p>
@@ -202,10 +144,11 @@ const ChessboardComponent = () => {
         ) : (
           <p>No analysis available.</p>
         )}
-        <h3>Moves:</h3>
-        <ul style={movesListStyle}>
+        
+        <h3 className="text-lg font-semibold mt-4">Moves:</h3>
+        <ul className="list-none p-0 m-0 overflow-y-auto max-h-300">
           {moves.map((move, index) => (
-            <li key={index}>{move}</li>
+            <li key={index}><p>{index+1} {move}</p></li>
           ))}
         </ul>
       </div>

@@ -25,12 +25,20 @@ app.post('/analyze', (req, res) => {
 
   stockfish.on('close', () => {
     const bestMoveMatch = response.match(/bestmove\s(\S+)/);
-    const scoreMatch = response.match(/score\s(cp|mate)\s(-?\d+)/);
+    const scoreMatch = response.match(/depth\s(\d+)\s.*\sscore\s(cp|mate)\s(-?\d+)/);
+
     const depthMatches = response.match(/(?:^|\s)depth\s(\d+)(?=\s|$)/g);
 
     const bestMove = bestMoveMatch ? bestMoveMatch[1] : 'N/A';
-    const score = scoreMatch ? `${scoreMatch[1]} ${scoreMatch[2]}` : 'N/A';
+    const score = scoreMatch ? `${scoreMatch[2]} ${scoreMatch[3]}` : 'N/A';
     
+    if (scoreMatch) {
+      const depth = parseInt(scoreMatch[1]);
+      if (depth === 20) {
+        score = `${scoreMatch[2]} ${scoreMatch[3]}`;
+      }
+    }
+
     let maxDepth = 0;
     depthMatches.forEach(match => {
         const depth = parseInt(match.match(/\d+/)[0]);

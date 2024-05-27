@@ -91,7 +91,10 @@ const ChessboardComponent = () => {
 
   return (
     <div className="flex flex-row items-start gap-8">
-      <ProgressBarComponent score={analysis ? analysis.score.toString() : '0'} />
+      <div className='ml-10 mt-10 flex border items-center'>
+        <ProgressBarComponent score={analysis ? analysis.score.toString() : '0'} />
+      </div>
+
       <div>
         <Chessboard
           id="StyledBoard"

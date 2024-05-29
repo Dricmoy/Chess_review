@@ -14,30 +14,32 @@ const ChessboardComponent = () => {
 
   async function analyzeChessMoves(fen) {
     const url = 'http://localhost:5000/analyze';  // Replace with your server's address if different
-
+  
     const payload = { fen: fen };
-
+  
     try {
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-
+  
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-
+  
       const data = await response.json();
       console.log('Best Move:', data.bestMove);
       console.log('Score:', data.score);
       console.log('Depth:', data.maxDepth);
+      console.log('Move Quality:', data.moveQuality);
       setAnalysis(data);
-
+  
     } catch (error) {
       console.error('Error:', error);
     }
   }
+  
 
   useEffect(() => {
     analyzeChessMoves(game.fen());
@@ -167,11 +169,11 @@ const ChessboardComponent = () => {
             <p><strong>Best Move:</strong> {analysis.bestMove}</p>
             <p><strong>Score:</strong> {analysis.score}</p>
             <p><strong>Depth:</strong> {analysis.maxDepth}</p>
+            <p><strong>Move Quality:</strong> {analysis.moveQuality}</p>
           </div>
         ) : (
           <p>No analysis available.</p>
         )}
-
         <h3 className="text-lg font-semibold mt-4">Moves:</h3>
         <ul className="list-none p-0 m-0 overflow-y-auto max-h-300">
           {moves.map((move, index) => (

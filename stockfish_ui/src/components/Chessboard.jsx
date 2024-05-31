@@ -11,6 +11,7 @@ const ChessboardComponent = () => {
   const [analysis, setAnalysis] = useState(null);
   const [orientation, setOrientation] = useState("white");
   const [currentPlayer, setCurrentPlayer] = useState('white');
+  const [fenHistory, setFenHistory] = useState([game.fen()]);
 
   async function analyzeChessMoves(fen) {
     const url = 'http://localhost:5000/analyze';  // Replace with your server's address if different
@@ -51,6 +52,8 @@ const ChessboardComponent = () => {
       modify(update);
       return update;
     });
+
+    setFenHistory((history) => [...history, game.fen()]); 
   }
 
   function onDrop(sourceSquare, targetSquare, piece) {
@@ -63,16 +66,29 @@ const ChessboardComponent = () => {
       });
 
       if (move) {
+        
         setAnalysis(null);
         setGame(gameCopy);
         setMoves((prevMoves) => [...prevMoves, move.san]);
         const nextPlayer = currentPlayer === 'white' ? 'black' : 'white';
         setCurrentPlayer(nextPlayer);
+        setFenHistory((history) => [...history, gameCopy.fen()]);
       }
     } catch (error) {
       console.error('Invalid move:', error.message);
     }
   }
+
+  function handleUndo() {
+    if (fenHistory.length > 1) {
+      const previousFen = fenHistory[fenHistory.length - 2]; // Get the previous FEN string
+      setFenHistory((history) => history.slice(0, -1)); // Pop the last FEN string
+      setMoves((prevMoves) => prevMoves.slice(0, -1)); // Remove the last move from moves array
+      setCurrentPlayer((prevPlayer) => (prevPlayer === 'white' ? 'black' : 'white')); // Switch player
+      setGame(new Chess(previousFen)); // Load the previous FEN string
+    }
+  }
+  
 
   const customPieces = useMemo(() => {
     const pieceComponents = {};
@@ -104,11 +120,9 @@ const ChessboardComponent = () => {
           animationDuration={300}
           areArrowsAllowed={true}
           arePiecesDraggable={true}
-          arePremovesAllowed={false}
           autoPromoteToQueen={false}
           boardOrientation={orientation}
           boardWidth={560}
-          clearPremovesOnRightClick={true}
           customBoardStyle={{
             borderRadius: '4px',
             boxShadow: '0 2px 10px rgba(0, 0, 0, 0.5)',
@@ -139,18 +153,11 @@ const ChessboardComponent = () => {
           </button>
 
           <button className="bg-gray-800 text-white px-4 py-2 rounded-md shadow-md hover:bg-gray-700"
-            onClick={() => {
-              safeGameMutate((game) => {
-                game.undo();
-              });
-              setMoves((prevMoves) => prevMoves.slice(0, -1));
-              setTimeout(() => {
-                setOrientation((prevOrientation) => (prevOrientation === "white" ? "black" : "white"));
-              }, 300);
-            }}
+            onClick={(handleUndo)}
           >
             Undo
           </button>
+
           <button className="bg-gray-800 text-white px-4 py-2 rounded-md shadow-md hover:bg-gray-700"
             onClick={() => {
               setOrientation((prevOrientation) => (prevOrientation === "white" ? "black" : "white"));
@@ -158,8 +165,11 @@ const ChessboardComponent = () => {
           >
             Switch to {orientation === "white" ? "Black" : "White"}
           </button>
+          
           <p>{`Player to move: ${currentPlayer}`}</p>
+        
         </div>
+      
       </div>
 
       <div className="w-[200px] bg-center bg-gray-500 rounded p-4">

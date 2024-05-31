@@ -5,7 +5,7 @@ import ChessboardComponent from '../components/Chessboard';
 const Home = () => {
   return (
     <div>
-      <h1>Chessboard with Analysis UI</h1>
+      <h1>Analyzer</h1>
       <ChessboardComponent/>
     </div>  
   );

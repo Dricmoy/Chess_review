@@ -31,3 +31,18 @@ body {
     text-wrap: balance;
   }
 }
+
+@keyframes blink {
+  0% { opacity: 0; }
+  50% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.cursor-blink::after {
+  content: "";
+  display: inline-block;
+  width: 2px; /* Adjust as needed */
+  height: 1.1em; /* Adjust as needed */
+  background-color: black; /* Change to black or adjust as needed */
+  animation: blink 1s infinite;
+}

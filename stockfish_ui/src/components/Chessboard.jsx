@@ -92,7 +92,7 @@ const ChessboardComponent = () => {
   }
   
   const bestMove = analysis ? analysis.bestMove : null;
-  
+
   const customPieces = useMemo(() => {
     const pieceComponents = {};
     pieces.forEach((piece) => {
@@ -109,14 +109,6 @@ const ChessboardComponent = () => {
     });
     return pieceComponents;
   }, []);
-
-  const inputStyle = {
-    padding: "10px 20px",
-    margin: "10px 0 10px 0",
-    borderRadius: "6px",
-    border: "none",
-    boxShadow: "0 2px 5px rgba(0, 0, 0, 0.5)",
-  };
 
   const handleFenInputChange = (e) => {
     const fenString = e.target.value;
@@ -137,16 +129,16 @@ const ChessboardComponent = () => {
   
   return (
     <div className="flex flex-row items-start gap-8">
-      <div className='ml-10 mt-10 flex border items-center'>
+      <div className='ml-10 mt-10 flex shadow-white shadow-sm items-center'>
         <ProgressBarComponent score={analysis ? analysis.score.toString() : '0'} />
       </div>
 
       <div>
-
-        <div className=''>
+        <div className="">
           <input
             ref={inputRef}
-            style={{ ...inputStyle, width: "90%" }}
+            className="p-2 mt-4 mb-2 appearance-auto rounded-full bg-white focus:outline-black cursor-blink text-black placeholder-black"
+            style={{margin:20, width: "90%" }}
             onChange={handleFenInputChange}
             placeholder="Paste FEN to start analysing custom position"
           />
@@ -162,8 +154,8 @@ const ChessboardComponent = () => {
           boardOrientation={orientation}
           boardWidth={560}
           customBoardStyle={{
-            borderRadius: '4px',
-            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.5)',
+            borderRadius: '5px',
+            boxShadow: '0 3px 10px rgba(255, 255, 255, 0.5)',
           }}
           customDarkSquareStyle={{ backgroundColor: '#779952' }}
           customLightSquareStyle={{ backgroundColor: '#edeed1' }}
@@ -179,7 +171,7 @@ const ChessboardComponent = () => {
               [
                 bestMove.substring(0, 2),
                 bestMove.substring(2, 4),
-                "rgb(0, 128, 0)",
+                "rgb(50, 89, 100)",
               ],
             ]
           }
@@ -220,7 +212,7 @@ const ChessboardComponent = () => {
       </div>
       
       {/*this is the user interface for the game moves and their analysis*/}
-      <div className="w-[200px] bg-center bg-gray-800 rounded p-4">
+      <div className="w-[200px] bg-center bg-gray-800 rounded p-4 shadow-white shadow-sm">
         <GameAnalysis analysis={analysis} moves={moves} />
       </div>
 

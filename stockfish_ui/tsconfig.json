@@ -34,7 +34,6 @@
     ".next/types/**/*.ts",
     "src/components/Chessboard.jsx",
     "build/types/**/*.ts",
-    "public/build/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"
